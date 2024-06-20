@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Diffie-Hellman Key Exchange</title>
+</head>
+<body>
+    <h1>Diffie-Hellman Key Exchange</h1>
+    <div>
+        <label for="p">Enter a prime number (p):</label>
+        <input type="text" id="p" value="23">
+    </div>
+    <div>
+        <label for="g">Enter a primitive root of p (g):</label>
+        <input type="text" id="g" value="5">
+    </div>
+    <div>
+        <label for="privateA">Alice's Private Key:</label>
+        <input type="text" id="privateA">
+    </div>
+    <div>
+        <label for="privateB">Bob's Private Key:</label>
+        <input type="text" id="privateB">
+    </div>
+    <div>
+        <button onclick="generatePublicKeys()">Generate Public Keys</button>
+    </div>
+    <div>
+        <label for="publicA">Alice's Public Key:</label>
+        <input type="text" id="publicA" readonly>
+    </div>
+    <div>
+        <label for="publicB">Bob's Public Key:</label>
+        <input type="text" id="publicB" readonly>
+    </div>
+    <div>
+        <button onclick="computeSharedSecret()">Compute Shared Secret</button>
+    </div>
+    <div>
+        <label for="sharedSecret">Shared Secret:</label>
+        <input type="text" id="sharedSecret" readonly>
+    </div>
+
+    <script>
+        const getValue = id => parseInt(document.getElementById(id).value);
+
+        const modExp = (base, exp, mod) => {
+            let res = 1;
+            base %= mod;
+            while (exp > 0) {
+                if (exp % 2) res = (res * base) % mod;
+                exp = Math.floor(exp / 2);
+                base = (base * base) % mod;
+            }
+            return res;
+        };
+
+        const generatePublicKeys = () => {
+            const p = getValue('p'), g = getValue('g');
+            document.getElementById('publicA').value = modExp(g, getValue('privateA'), p);
+            document.getElementById('publicB').value = modExp(g, getValue('privateB'), p);
+        };
+
+        const computeSharedSecret = () => {
+            const p = getValue('p');
+            document.getElementById('sharedSecret').value = modExp(getValue('publicB'), getValue('privateA'), p);
+        };
+    </script>
+</body>
+</html>
