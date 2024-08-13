@@ -2,50 +2,69 @@ import java.util.LinkedHashSet;
 import java.util.Scanner;
 import java.util.Set;
 
-public class PlayfairCipher {
+public class PlayFairCipher {
     private char[][] matrix = new char[5][5];
+    private boolean paddingAdded = false;
 
-    public PlayfairCipher(String key) {
+    public PlayFairCipher(String key) {
         Set<Character> charset = new LinkedHashSet<>();
         for (char c : (key.toUpperCase() + "ABCDEFGHIKLMNOPQRSTUVWXYZ").toCharArray()) {
-            if (c != 'J') charset.add(c);
+            if (c >= 'A' && c <= 'Z' && c != 'J')
+                charset.add(c);
         }
         int i = 0;
-        for (char c : charset) matrix[i / 5][i++ % 5] = c;
+        for (char c : charset)
+            matrix[i / 5][i++ % 5] = c;
     }
 
     private int[] findPosition(char c) {
         for (int i = 0; i < 5; i++)
             for (int j = 0; j < 5; j++)
-                if (matrix[i][j] == c) return new int[]{i, j};
+                if (matrix[i][j] == c)
+                    return new int[] { i, j };
         return null;
     }
 
     private String processText(String text, boolean encrypt) {
         StringBuilder result = new StringBuilder();
         text = text.toUpperCase().replaceAll("[^A-Z]", "").replace('J', 'I');
-        if (text.length() % 2 != 0) text += 'X';
+        StringBuilder formattedText = new StringBuilder();
+        
+        for (int i = 0; i < text.length(); i++) {
+            char a = text.charAt(i);
+            formattedText.append(a);
+            if (i < text.length() - 1 && a == text.charAt(i + 1)) {
+                formattedText.append('X');
+            }
+        }
+        if (formattedText.length() % 2 != 0) {
+            formattedText.append('X');
+            paddingAdded = true;
+        }
+        text = formattedText.toString();
         for (int i = 0; i < text.length(); i += 2) {
-            char a = text.charAt(i), b = text.charAt(i + 1);
-            if (a == b) b = 'X';
-            int[] posA = findPosition(a), posB = findPosition(b);
-            if (posA[0] == posB[0] || posA[1] == posB[1]) {
+            char a = text.charAt(i);
+            char b = text.charAt(i + 1);
+
+            int[] posA = findPosition(a);
+            int[] posB = findPosition(b);
+
+            if (posA[0] == posB[0]) {
                 result.append(matrix[posA[0]][(posA[1] + (encrypt ? 1 : 4)) % 5]);
                 result.append(matrix[posB[0]][(posB[1] + (encrypt ? 1 : 4)) % 5]);
+            } else if (posA[1] == posB[1]) {
+                result.append(matrix[(posA[0] + (encrypt ? 1 : 4)) % 5][posA[1]]);
+                result.append(matrix[(posB[0] + (encrypt ? 1 : 4)) % 5][posB[1]]);
             } else {
                 result.append(matrix[posA[0]][posB[1]]);
                 result.append(matrix[posB[0]][posA[1]]);
             }
         }
+
+        if (!encrypt && paddingAdded && result.charAt(result.length() - 1) == 'X') {
+            result.deleteCharAt(result.length() - 1);
+        }
         return result.toString();
-    }
-
-    public String encrypt(String plaintext) {
-        return processText(plaintext, true);
-    }
-
-    public String decrypt(String ciphertext) {
-        return processText(ciphertext, false);
     }
 
     public static void main(String[] args) {
@@ -54,10 +73,11 @@ public class PlayfairCipher {
         String key = scanner.nextLine();
         System.out.println("Enter the plaintext:");
         String plaintext = scanner.nextLine();
-        PlayfairCipher cipher = new PlayfairCipher(key);
-        String ciphertext = cipher.encrypt(plaintext);
+        PlayFairCipher cipher = new PlayFairCipher(key);
+        String ciphertext = cipher.processText(plaintext, true);
         System.out.println("Encrypted text: " + ciphertext);
-        System.out.println("Decrypted text: " + cipher.decrypt(ciphertext));
+        String decryptedText = cipher.processText(ciphertext, false);
+        System.out.println("Decrypted text: " + decryptedText);
         scanner.close();
     }
 }
